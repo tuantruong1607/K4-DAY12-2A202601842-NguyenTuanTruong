@@ -222,7 +222,7 @@ Trả về reply, client_id, turns_before, usd_cost và usage.
 
 Phiên bản Render được kiểm tra trước khi thêm frontend có thể vẫn trả 404 tại `/` cho đến khi push code và redeploy. Sau khi redeploy commit mới, `/` sẽ mở web console; `/docs` vẫn là tài liệu API tương tác.
 
-## 8. CI/CD với GitHub Actions và Railway
+## 8. CI/CD với GitHub Actions và Render
 
 Workflow nằm tại `.github/workflows/ci.yml` và có ba job:
 
@@ -230,13 +230,11 @@ Workflow nằm tại `.github/workflows/ci.yml` và có ba job:
 2. `build-image`: chạy `docker build` để phát hiện lỗi Dockerfile trước khi deploy.
 3. `deploy`: chỉ chạy khi push vào `main`, đồng thời có `needs: [test, build-image]` nên test hoặc build lỗi thì không deploy.
 
-Job deploy dùng `RAILWAY_TOKEN` từ GitHub Secrets và ba repository variables:
+Job deploy gọi Render Deploy Hook bằng `RENDER_DEPLOY_HOOK_URL` từ GitHub Secrets. Hook được nối thêm `ref=${GITHUB_SHA}` để Render deploy đúng commit vừa pass CI.
 
-- `RAILWAY_PROJECT_ID`: ID project Railway.
-- `RAILWAY_ENVIRONMENT`: thường là `production`.
-- `RAILWAY_SERVICE`: tên service web trên Railway.
+`render.yaml` đặt `autoDeployTrigger: off` để tránh Render tự deploy song song với GitHub Actions. Render Blueprint vẫn quản lý web service, Redis, Dockerfile, biến môi trường và `/healthz`.
 
-Không nên bật đồng thời Railway GitHub Autodeploy và job `railway up` trong workflow này, vì một commit có thể tạo hai lần deploy. Chọn một cơ chế CD; workflow hiện tại là cơ chế được chọn vì nó tạo cổng chất lượng sau CI.
+Không nên bật đồng thời Render Auto-Deploy và Deploy Hook trong workflow này, vì một commit có thể tạo hai lần deploy. Chọn Deploy Hook để CD chỉ chạy sau khi CI xanh.
 
 README đã có badge workflow. Badge chỉ chuyển sang `passing` sau khi workflow được push lên GitHub và chạy thành công ít nhất một lần.
 

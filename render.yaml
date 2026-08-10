@@ -9,6 +9,7 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     plan: free
+    autoDeployTrigger: off
     healthCheckPath: /healthz
     envVars:
       - key: API_TOKEN
