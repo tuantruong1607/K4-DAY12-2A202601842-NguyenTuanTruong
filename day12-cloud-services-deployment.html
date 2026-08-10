@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bài Lab số 12 — Cloud Services &amp; Deployment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin:0; height:100%; overflow:hidden; background:#0f1f2e;
+               font-family:'Be Vietnam Pro', system-ui, sans-serif; }
+  button { font-family:inherit; cursor:pointer; border:none; }
+  button:focus-visible { outline:.4vmin solid #4f9cf9; outline-offset:.4vmin; }
+
+  #track { display:flex; height:100vh; transition:transform .5s cubic-bezier(.7,0,.2,1); }
+  @media (prefers-reduced-motion: reduce) { #track { transition:none; } }
+
+  .slide { flex:0 0 100vw; height:100vh; display:flex; flex-direction:column;
+           padding:5vmin 6.5vmin; overflow:hidden; }
+  .light { background:#f5f7fa; color:#0f1f2e; }
+  .dark  { background:radial-gradient(120% 120% at 50% 0%,#1a3558 0%,#0f1f2e 55%,#08121c 100%);
+           color:#e8f0fb; }
+  .center { align-items:center; justify-content:center; text-align:center; }
+
+  .eyebrow { font-size:2.3vmin; letter-spacing:.42em; text-transform:uppercase;
+              color:#4f9cf9; font-weight:700; }
+  .h1 { font-size:5.6vmin; font-weight:900; line-height:1.04; }
+  .sub { font-size:2.8vmin; font-weight:600; color:#5a6a7a; margin-top:1vmin; }
+  .dark .sub { color:#93b8e0; }
+
+  .head { display:flex; align-items:center; gap:2vmin; flex:0 0 auto; }
+  .badge { font-size:2.1vmin; font-weight:800; letter-spacing:.2em; background:#4f9cf9;
+           color:#fff; padding:1vmin 2.2vmin; border-radius:99px; white-space:nowrap; }
+  .badge.orange { background:#e07c3a; }
+  .badge.grey   { background:#5a6a7a; }
+  .clock { margin-left:auto; font-size:2.3vmin; font-weight:800; color:#7a8a9a; white-space:nowrap; }
+  .who { font-size:2vmin; font-weight:800; letter-spacing:.14em; text-transform:uppercase;
+         padding:.8vmin 1.8vmin; border-radius:99px; white-space:nowrap; }
+  .who.solo { background:#e8f0fb; color:#1a6abf; border:.3vmin solid #93b8e0; }
+
+  .body { flex:1; min-height:0; display:flex; gap:4vmin; margin-top:2.6vmin; }
+  .main { flex:1.45; min-width:0; display:flex; flex-direction:column; gap:1.8vmin; }
+  .side { flex:0 0 31vw; display:flex; flex-direction:column; gap:1.8vmin; }
+
+  .card { background:#fff; border:.4vmin solid #d5dde8; border-radius:2.2vmin;
+          padding:2.2vmin 2.6vmin; }
+  .card h3, .card h4 { margin:0; font-weight:800; color:#0f1f2e; }
+  .card h3 { font-size:3vmin; }
+  .card h4 { font-size:2.5vmin; }
+  .card p  { margin:.6vmin 0 0; font-size:2vmin; font-weight:500; color:#5a6a7a; line-height:1.4; }
+  .card.blue  { background:#e8f4ff; border-color:#93b8e0; }
+  .card.amber { background:#fdf3e0; border-color:#e8b84c; }
+  .card.red   { background:#fdeaea; border-color:#e07070; }
+  .card.green { background:#e8f6ee; border-color:#6abf8a; }
+  .dark .card { background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.18); }
+  .dark .card h3, .dark .card h4 { color:#e8f0fb; }
+  .dark .card p { color:#93b8e0; }
+
+  .li { display:flex; align-items:flex-start; gap:1.6vmin; font-size:2.7vmin;
+        font-weight:600; line-height:1.35; }
+  .li b { color:#1a6abf; }
+  .dark .li b { color:#4f9cf9; }
+  .dot { color:#4f9cf9; font-weight:900; flex:0 0 auto; }
+
+  .pill { display:inline-flex; align-self:flex-start; align-items:center; gap:1.3vmin;
+          background:#fbeee4; border:.4vmin solid #e07c3a; color:#a8531f;
+          font-size:2.3vmin; font-weight:700; padding:1.2vmin 2.4vmin; border-radius:99px; }
+  .pill.blue { background:#e8f0fb; border-color:#4f9cf9; color:#1a6abf; }
+  .dark .pill { background:rgba(79,156,249,.13); border-color:#4f9cf9; color:#bcd8fa; }
+
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:1.6vmin; }
+  .grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:1.8vmin; }
+  .metric { display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:15vmin;
+            text-align:center; background:#fff; border:.4vmin solid #d5dde8; border-radius:2vmin; padding:1.8vmin; }
+  .metric strong { color:#1a6abf; font-size:3.2vmin; }
+  .metric span { margin-top:.7vmin; color:#5a6a7a; font-size:1.9vmin; font-weight:700; }
+
+  .trace { background:#0a1828; border:.4vmin solid #1e3a5a; border-radius:2vmin;
+           padding:2vmin 2.4vmin; }
+  .trace-label { margin-bottom:1.2vmin; color:#5a8abf; font-size:1.9vmin; font-weight:700; letter-spacing:.2em; text-transform:uppercase; }
+  .trace pre { margin:0; font-size:1.85vmin; line-height:1.6; color:#93d4ff;
+               font-weight:600; white-space:pre-wrap; font-family:'Courier New',monospace; }
+
+  .timer { display:flex; flex-direction:column; align-items:center; background:#fff;
+           border:.5vmin solid #d5dde8; border-radius:3vmin; padding:2.6vmin 2vmin;
+           box-shadow:0 3vmin 6vmin rgba(10,20,40,.1); }
+  .dark .timer { background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.18); box-shadow:none; }
+  .t-label { font-size:1.9vmin; letter-spacing:.3em; text-transform:uppercase;
+             color:#7a8a9a; font-weight:700; }
+  .t-num { font-size:17vmin; font-weight:900; line-height:.92; font-variant-numeric:tabular-nums;
+           color:#0f1f2e; margin:1.2vmin 0; }
+  .dark .t-num { color:#e8f0fb; }
+  .t-num.warn { color:#c62f2f; }
+  .t-btns { display:flex; gap:1.5vmin; margin-top:1.6vmin; }
+  .t-btns button { font-size:2.1vmin; font-weight:800; padding:1.3vmin 2.6vmin; border-radius:99px; }
+  .t-start { background:#1a6abf; color:#fff; }
+  .t-reset { background:#e9ebe6; color:#5a6a7a; }
+
+  .nav { position:fixed; top:50%; transform:translateY(-50%); width:6vmin; height:9vmin;
+         border-radius:1.5vmin; background:transparent; color:#1a6abf; font-size:4vmin;
+         font-weight:800; display:flex; align-items:center; justify-content:center;
+         opacity:.08; z-index:20; transition:opacity .2s, background .2s, color .2s; }
+  .nav:hover, .nav:focus-visible { opacity:1; background:rgba(10,20,40,.88); color:#fff; }
+  .nav.p { left:.4vmin; } .nav.n { right:.4vmin; }
+
+  #dots { position:fixed; bottom:2.2vmin; left:50%; transform:translateX(-50%);
+          display:flex; gap:1.1vmin; align-items:center; z-index:20; }
+  #dots button { height:1.3vmin; width:1.3vmin; border-radius:99px;
+                 background:rgba(255,255,255,.4); transition:all .3s; padding:0; }
+  #dots button.on { width:4.5vmin; background:#4f9cf9; }
+  .light #dots button { background:rgba(10,20,40,.2); }
+
+  .num-accent { font-size:4.4vmin; font-weight:900; color:#4f9cf9; min-width:8vmin; }
+  .step-row { display:flex; align-items:center; gap:3vmin;
+              border-top:.3vmin solid #d5dde8; padding:2.2vmin .5vmin; }
+  .step-row:last-child { border-bottom:.3vmin solid #d5dde8; }
+  .dark .step-row { border-color:rgba(255,255,255,.18); }
+  .phase-box { border-radius:1.8vmin; padding:1.8vmin 1.4vmin; text-align:center; }
+  .phase-lbl { font-size:1.8vmin; font-weight:800; letter-spacing:.16em; }
+  .phase-name { font-size:2.4vmin; font-weight:800; margin-top:.6vmin; }
+  .phase-time { font-size:1.9vmin; font-weight:700; color:#7a8a9a; margin-top:.4vmin; }
+  .phase-blue  { background:#e8f0fb; border:.4vmin solid #93b8e0; }
+  .phase-blue .phase-lbl { color:#1a6abf; }
+  .phase-orange{ background:#fbeee4; border:.4vmin solid #e5b691; }
+  .phase-orange .phase-lbl { color:#a8531f; }
+  .phase-break { background:#f2f3f0; border:.4vmin dashed #b9c0b6; }
+  .phase-break .phase-lbl { color:#7a8a9a; }
+  .phase-name.break-name { color:#5a6a7a; }
+  .question { font-size:3.3vmin; font-weight:600; }
+  .question b { color:#1a6abf; }
+  .dark .question b { color:#4f9cf9; }
+  .repo-tree { background:#0f1f2e; color:#e8f0fb; border-radius:2.4vmin; padding:2.6vmin; }
+  .repo-tree .label { font-size:1.9vmin; letter-spacing:.28em; text-transform:uppercase; color:#5a8abf; font-weight:700; }
+  .repo-tree pre { font-size:1.9vmin; font-weight:700; margin:1.4vmin 0 0; line-height:1.6; color:#93d4ff; }
+  .muted { color:#7a8a9a; }
+  .finish-title { font-size:9vmin; font-weight:900; line-height:.98; }
+
+  @media (max-width: 900px) {
+    body { overflow:auto; }
+    #track { display:block; height:auto; transform:none !important; }
+    .slide { min-height:100svh; height:auto; overflow:visible; padding:6vmin 6vmin 14vmin; }
+    .body { display:block; height:auto; }
+    .main, .side { margin-bottom:3vmin; }
+    .grid3 { grid-template-columns:1fr; }
+    .head .h1 { font-size:4.8vmin; }
+    .nav { opacity:.35; }
+  }
+  @media (max-width: 560px) {
+    .head { align-items:flex-start; flex-wrap:wrap; }
+    .head .clock { margin-left:0; width:100%; }
+    .grid2 { grid-template-columns:1fr; }
+    .question { font-size:4.5vmin; }
+    .phase-name { font-size:3.4vmin; }
+    .finish-title { font-size:13vmin; }
+  }
+</style>
+</head>
+<body>
+
+<div id="track">
+
+  <!-- 1 — MỞ ĐẦU -->
+  <section class="slide dark center">
+    <div class="eyebrow" style="margin-bottom:3vmin;">Khởi động buổi học</div>
+    <div style="font-size:14vmin;font-weight:900;line-height:.98;">BÀI LAB SỐ 12</div>
+    <div style="width:16vmin;height:.7vmin;background:#4f9cf9;border-radius:99px;margin:4vmin 0;"></div>
+    <div style="font-size:4.4vmin;font-weight:500;color:#93b8e0;">Chủ đề: <b style="color:#fff;font-weight:800;">Cloud Services &amp; Deployment</b></div>
+    <div style="font-size:2.8vmin;font-weight:600;color:#5a8abf;margin-top:3vmin;letter-spacing:.05em;">Từ code chạy local đến production trên Cloud</div>
+    <div style="margin-top:3vmin;"><span class="who solo">Hình thức làm: Solo</span></div>
+  </section>
+
+  <!-- 2 — CÂU HỎI TRỌNG TÂM -->
+  <section class="slide light">
+    <div class="head"><div><div class="h1">CÂU HỎI XUYÊN SUỐT LAB</div><div class="sub">Bạn sẽ trả lời được bằng test, health check và logs</div></div></div>
+    <div style="flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:1vmin;margin-top:1vmin;">
+      <div class="step-row"><span class="num-accent">01</span><span class="question">Làm sao để app <b>chết ngay</b> khi cấu hình production bị thiếu?</span></div>
+      <div class="step-row"><span class="num-accent">02</span><span class="question">Làm sao đóng gói Docker <b>gọn và an toàn</b>, không chạy root?</span></div>
+      <div class="step-row"><span class="num-accent">03</span><span class="question">Làm sao bảo vệ API khỏi <b>lạm dụng tốc độ</b> và <b>vượt ngân sách</b>?</span></div>
+      <div class="step-row"><span class="num-accent">04</span><span class="question">Làm sao scale 3 container mà <b>không mất history</b>?</span></div>
+    </div>
+    <div class="pill">Không cần OpenAI API key — lab dùng mock LLM chạy offline</div>
+  </section>
+
+  <!-- 3 — LUỒNG BUỔI LAB -->
+  <section class="slide light">
+    <div class="head"><div><div class="h1">LUỒNG BUỔI LAB</div><div class="sub">CP0 → CP5 · tổng <b style="color:#1a6abf;">240 phút</b></div></div></div>
+    <div style="flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:1.4vmin;">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1.4vmin;">
+        <div class="phase-box phase-blue"><div class="phase-lbl">CP0</div><div class="phase-name">Setup</div><div class="phase-time">20'</div></div>
+        <div class="phase-box phase-blue"><div class="phase-lbl">CP1</div><div class="phase-name">Config &amp; Log</div><div class="phase-time">40'</div></div>
+        <div class="phase-box phase-orange"><div class="phase-lbl">CP2</div><div class="phase-name">Docker</div><div class="phase-time">45'</div></div>
+        <div class="phase-box phase-break"><div class="phase-lbl">BREAK</div><div class="phase-name break-name">Giải lao</div><div class="phase-time">10'</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1.4vmin;">
+        <div class="phase-box phase-orange"><div class="phase-lbl">CP3</div><div class="phase-name">Security</div><div class="phase-time">45'</div></div>
+        <div class="phase-box phase-orange"><div class="phase-lbl">CP4</div><div class="phase-name">Reliability</div><div class="phase-time">40'</div></div>
+        <div class="phase-box phase-orange"><div class="phase-lbl">CP5</div><div class="phase-name">Cloud Deploy</div><div class="phase-time">30'</div></div>
+        <div class="phase-box phase-blue"><div class="phase-lbl">SUBMIT</div><div class="phase-name">Nộp &amp; Chấm</div><div class="phase-time">10'</div></div>
+      </div>
+    </div>
+    <div class="pill">Kẹt quá 10 phút? Gọi Lab Coach và đi tiếp checkpoint sau.</div>
+  </section>
+
+  <!-- 4 — CP0 SETUP -->
+  <section class="slide light">
+    <div class="head"><div><div class="h1">SETUP &amp; CẤU TRÚC NỘP BÀI</div><div class="sub">CP0 · Môi trường sẵn sàng trước khi code</div></div><span class="clock">20 phút</span></div>
+    <div class="body">
+      <div class="main">
+        <div class="li"><span class="dot">•</span><span>Fork repo đúng lớp, clone về máy, tạo <b>venv</b> và cài <b>requirements</b>.</span></div>
+        <div class="li"><span class="dot">•</span><span>Copy <code style="font-weight:800;color:#1a6abf;">.env.example</code> → <code style="font-weight:800;color:#1a6abf;">.env</code>, tạo <b>AGENT_API_KEY</b> riêng.</span></div>
+        <div class="li"><span class="dot">•</span><span>Chạy <code style="font-weight:800;color:#1a6abf;">docker compose up -d redis</code> hoặc dùng <code>REDIS_URL=fake://</code> cho local.</span></div>
+        <div class="li"><span class="dot">•</span><span>Chạy baseline test từ <b>gốc repo</b>; lỗi import là lỗi setup, test đỏ do TODO là bình thường.</span></div>
+        <div style="display:flex;gap:1.2vmin;margin-top:1vmin;"><span class="who solo">Cá nhân</span><code style="font-size:2.1vmin;font-weight:800;color:#1a6abf;align-self:center;">KX-DAY12-[MSSV]-[HoVaTen]</code></div>
+      </div>
+      <div class="side"><div class="timer" data-secs="1200"><div class="t-label">Thời gian CP0</div><div class="t-num">20:00</div><div class="t-btns"><button class="t-start" type="button">START</button><button class="t-reset" type="button">RESET</button></div></div><div class="repo-tree"><div class="label">Cấu trúc repo</div><pre>KX-DAY12-[MSSV]-[HoVaTen] /
+├── app/              ← code CP1–CP4
+├── utils/mock_llm.py ← cho sẵn
+├── Dockerfile        ← CP2
+├── docker-compose.yml
+├── nginx/            ← gateway
+├── tests/
+├── DEPLOYMENT.md
+└── exercises.md</pre></div></div>
+    </div>
+  </section>
+
+  <!-- 5 — CP1 CONFIG -->
+  <section class="slide light">
+    <div class="head"><span class="badge">CP1</span><span class="h1">12-FACTOR CONFIG &amp; FAIL-FAST</span><span class="clock">40 phút</span></div>
+    <div class="body">
+      <div class="main">
+        <div class="step-row"><span class="num-accent">01</span><span class="question" style="font-size:2.7vmin;"><b>BaseSettings:</b> đọc env, thiếu <code>AGENT_API_KEY</code> thì app fail ngay.</span></div>
+        <div class="step-row"><span class="num-accent">02</span><span class="question" style="font-size:2.7vmin;"><b>JSON log:</b> <code>timestamp</code>, <code>level</code>, <code>event</code> — máy đọc được, Coach kiểm tra được.</span></div>
+        <div class="step-row"><span class="num-accent">03</span><span class="question" style="font-size:2.7vmin;"><b>Health vs Ready:</b> process sống khác với dependency sẵn sàng.</span></div>
+      </div>
+      <div class="side"><div class="timer" data-secs="2400"><div class="t-label">Thời gian CP1</div><div class="t-num">40:00</div><div class="t-btns"><button class="t-start" type="button">START</button><button class="t-reset" type="button">RESET</button></div></div><div class="card blue"><h4>Fail-fast có lợi gì?</h4><p>Nếu để mặc định <code>agent_api_key = "changeme"</code>, app khởi động thành công nhưng chạy sai âm thầm. Fail-fast biến lỗi cấu hình thành lỗi nhìn thấy ngay.</p><p><b>Lệnh:</b> <code>pytest tests/test_cp1.py -v</code></p></div></div>
+    </div>
+  </section>
+
+  <!-- 6 — CP2 DOCKER -->
+  <section class="slide dark">
+    <div class="head"><span class="badge">CP2</span><span class="h1">DOCKER: MULTI-STAGE &amp; NON-ROOT</span><span class="clock">45 phút</span></div>
+    <div class="body">
+      <div class="main"><div class="trace"><div class="trace-label">Dockerfile / production runtime</div><pre># Stage 1: build dependencies
+FROM python:3.11-slim AS builder
+WORKDIR /build
+COPY requirements.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+# Stage 2: runtime
+FROM python:3.11-slim
+WORKDIR /app
+COPY --from=builder /install /usr/local
+COPY app/ app/
+COPY utils/ utils/
+RUN adduser --disabled-password --no-create-home appuser
+USER appuser
+EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"
+CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]</pre></div></div>
+      <div class="side"><div class="timer dark" data-secs="2700"><div class="t-label">Thời gian CP2</div><div class="t-num">45:00</div><div class="t-btns"><button class="t-start" type="button">START</button><button class="t-reset" type="button">RESET</button></div></div><div class="card"><h4>Tại sao multi-stage?</h4><p>Stage build có thể nặng; stage runtime chỉ copy dependency cần thiết → image production dưới 500MB, stretch goal dưới 200MB.</p><p><b>Bảo mật:</b> non-root user. <b>Lệnh:</b> <code>pytest tests/test_cp2.py -v</code></p></div></div>
+    </div>
+  </section>
+
+  <!-- 7 — CP3 SECURITY -->
+  <section class="slide light">
+    <div class="head"><span class="badge orange">CP3</span><span class="h1">API SECURITY &amp; LIMITS</span><span class="clock">45 phút</span></div>
+    <div class="body"><div class="main"><div class="grid3" style="margin-top:auto;margin-bottom:auto;"><div class="card blue"><h4>01 / API Key Auth</h4><p>Mọi API nghiệp vụ cần <code>X-API-Key</code> khớp <code>AGENT_API_KEY</code>.</p></div><div class="card amber"><h4>02 / Rate Limit</h4><p>Redis Sorted Set đếm request 60 giây gần nhất. Vượt ngưỡng → <code>429</code>.</p></div><div class="card red"><h4>03 / Cost Guard</h4><p>Ngân sách mô phỏng theo tháng. Vượt budget → <code>402</code>, không gọi LLM trả phí.</p></div></div><div class="pill blue">Prune → Count → Check → Record UUID → Expire</div></div><div class="side"><div class="timer" data-secs="2700"><div class="t-label">Thời gian CP3</div><div class="t-num">45:00</div><div class="t-btns"><button class="t-start" type="button">START</button><button class="t-reset" type="button">RESET</button></div></div><div class="card"><h4>Hai lớp bảo vệ khác nhau</h4><p><b style="color:#1a6abf;">Rate limit</b> bảo vệ hạ tầng khỏi request quá nhanh. <b style="color:#a8531f;">Cost guard</b> bảo vệ ngân sách khỏi request quá đắt.</p><p><b>Lệnh:</b> <code>pytest tests/test_cp3.py -v</code></p></div></div></div>
+  </section>
+
+  <!-- 8 — CP4 RELIABILITY -->
+  <section class="slide light">
+    <div class="head"><span class="badge">CP4</span><span class="h1">STATELESS &amp; GRACEFUL SHUTDOWN</span><span class="clock">40 phút</span></div>
+    <div class="body"><div class="main"><div class="step-row"><span class="num-accent">A</span><span class="question" style="font-size:2.7vmin;"><b>Stateless:</b> history ở Redis List, không ở dict Python. Scale 3 bản sao vẫn dùng chung state.</span></div><div class="step-row"><span class="num-accent">B</span><span class="question" style="font-size:2.7vmin;"><b>Shutdown:</b> nhận SIGTERM, ngừng traffic mới, đợi request đang chạy xong rồi đóng Redis.</span></div><div class="card blue" style="margin-top:1.2vmin;"><h4>Scale path</h4><p><code>Nginx :8000 → agent × 3 → Redis history</code></p><p>Gọi cùng user qua gateway, quan sát <code>history_length</code> tăng 1 → 2 → 3 → 4 → 5.</p></div></div><div class="side"><div class="timer" data-secs="2400"><div class="t-label">Thời gian CP4</div><div class="t-num">40:00</div><div class="t-btns"><button class="t-start" type="button">START</button><button class="t-reset" type="button">RESET</button></div></div><div class="repo-tree"><div class="label">Prerequisite</div><pre>Dockerfile ✓
+ service agent ✓
+ Redis ✓
+ Nginx gateway ✓
+
+ docker compose up -d
+ --scale agent=3
+
+ pytest tests/test_cp4.py -v</pre></div></div></div>
+  </section>
+
+  <!-- 9 — CP5 DEPLOY -->
+  <section class="slide dark">
+    <div class="head"><span class="badge orange">CP5</span><span class="h1">CLOUD DEPLOYMENT &amp; SUBMIT</span><span class="clock">30 phút</span></div>
+    <div class="body"><div class="main" style="justify-content:center;gap:2.6vmin;"><div class="li"><span class="dot">✔</span><span><b>Chọn cloud:</b> Railway hoặc Render; quota/account verification không ổn thì dùng Local Fallback.</span></div><div class="li"><span class="dot">✔</span><span><b>Config:</b> <code>AGENT_API_KEY</code>, <code>REDIS_URL</code>, port động <code>PORT</code>.</span></div><div class="li"><span class="dot">✔</span><span><b>Deploy:</b> connect GitHub, chờ build xanh, điền URL vào <code>DEPLOYMENT.md</code>.</span></div><div class="li"><span class="dot">✔</span><span><b>Verify:</b> <code>/health=200</code>, <code>/ready=200</code>, thiếu key <code>401</code>, đúng key <code>200</code>.</span></div></div><div class="side"><div class="timer dark" data-secs="1800"><div class="t-label">Thời gian CP5</div><div class="t-num">30:00</div><div class="t-btns"><button class="t-start" type="button">START</button><button class="t-reset" type="button">RESET</button></div></div><div class="card"><h4>Required evidence</h4><p>Ảnh dashboard deploy và log/curl của 4 endpoint trong <code>screenshots/</code>.</p><p><b>Fallback:</b> <code>LOCAL_FALLBACK=true</code> + <code>docker compose up -d</code>.</p><p><b>Chấm thử:</b> <code>python grade.py</code></p></div></div></div>
+  </section>
+
+  <!-- 10 — SUBMIT -->
+  <section class="slide light">
+    <div class="head"><span class="badge orange">CHECKLIST</span><span class="h1">QUY TẮC NỘP BÀI</span></div>
+    <div class="body"><div class="main" style="justify-content:center;gap:1vmin;"><div class="li"><span class="dot">!</span><span><b>Tên thư mục:</b> <code style="font-weight:800;color:#1a6abf;">KX-DAY12-[MSSV]-[HoVaTen]</code>.</span></div><div class="li"><span class="dot">!</span><span><b>Không commit .env:</b> lộ API key hoặc secrets bị trừ điểm.</span></div><div class="li"><span class="dot">!</span><span><b>Exercises:</b> đủ 10 câu, viết bằng lời của mình.</span></div><div class="li"><span class="dot">!</span><span><b>Giải thích code:</b> Coach có thể hỏi bất kỳ dòng nào.</span></div></div><div class="side"><div class="card amber"><h4>Final checklist</h4><p><code>python grade.py</code><br>Kiểm tra <code>DEPLOYMENT.md</code>, screenshots và repo Public.</p></div><div class="card green"><h4>Nộp bài</h4><p><code>git add -A</code><br><code>git commit -m "Hoàn thành lab Day 12"</code><br><code>git push</code><br><br>Nộp link repository lên Codelab.</p></div></div></div>
+  </section>
+
+  <!-- 11 — KẾT THÚC -->
+  <section class="slide dark center">
+    <div class="eyebrow" style="margin-bottom:3vmin;">Kết thúc giới thiệu Lab 12</div>
+    <div class="finish-title">CODE SẠCH.<br><span style="color:#4f9cf9;">DEPLOY VỮNG.</span></div>
+    <div style="width:16vmin;height:.7vmin;background:#4f9cf9;border-radius:99px;margin:4vmin 0;"></div>
+    <div class="sub" style="color:#93b8e0;max-width:70vmin;">Production không chấp nhận những giả định. Hãy để test và logs nói lên sự thật.</div>
+  </section>
+
+</div>
+
+<button class="nav p" id="prev" type="button" aria-label="Slide trước">‹</button>
+<button class="nav n" id="next" type="button" aria-label="Slide sau">›</button>
+<div id="dots" aria-label="Chọn slide"></div>
+
+<script>
+(function () {
+  var track = document.getElementById('track');
+  var slides = Array.prototype.slice.call(track.children);
+  var total = slides.length, current = 0;
+  var dotsWrap = document.getElementById('dots');
+
+  for (var i = 0; i < total; i++) {
+    (function (index) {
+      var dot = document.createElement('button');
+      dot.type = 'button';
+      dot.setAttribute('aria-label', 'Slide ' + (index + 1));
+      dot.addEventListener('click', function () { go(index); });
+      dotsWrap.appendChild(dot);
+    })(i);
+  }
+
+  function go(index) {
+    current = Math.max(0, Math.min(total - 1, index));
+    track.style.transform = 'translateX(-' + (current * 100) + 'vw)';
+    Array.prototype.forEach.call(dotsWrap.children, function (dot, i) { dot.className = i === current ? 'on' : ''; });
+  }
+
+  document.getElementById('prev').onclick = function () { go(current - 1); };
+  document.getElementById('next').onclick = function () { go(current + 1); };
+  window.addEventListener('keydown', function (event) {
+    if (event.key === 'ArrowRight' || event.key === 'PageDown' || event.key === ' ') { event.preventDefault(); go(current + 1); }
+    else if (event.key === 'ArrowLeft' || event.key === 'PageUp') { event.preventDefault(); go(current - 1); }
+    else if (event.key === 'Home') { event.preventDefault(); go(0); }
+    else if (event.key === 'End') { event.preventDefault(); go(total - 1); }
+  });
+
+  function format(seconds) {
+    var minutes = Math.floor(seconds / 60), secs = seconds % 60;
+    return [minutes, secs].map(function (value) { return String(value).padStart(2, '0'); }).join(':');
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.timer'), function (box) {
+    var totalSeconds = parseInt(box.getAttribute('data-secs'), 10), left = totalSeconds, running = false;
+    var display = box.querySelector('.t-num'), start = box.querySelector('.t-start'), reset = box.querySelector('.t-reset');
+    function paint() { display.textContent = format(left); display.className = 't-num' + (left <= 300 ? ' warn' : ''); start.textContent = running ? 'PAUSE' : 'START'; }
+    start.onclick = function () { running = !running; paint(); };
+    reset.onclick = function () { running = false; left = totalSeconds; paint(); };
+    setInterval(function () { if (running && left > 0) { left--; if (!left) running = false; paint(); } }, 1000);
+    paint();
+  });
+  var requestedSlide = parseInt((window.location.hash.match(/slide=(\d+)/) || [])[1], 10);
+  go(Number.isFinite(requestedSlide) ? requestedSlide : 0);
+})();
+</script>
+</body>
+</html>
