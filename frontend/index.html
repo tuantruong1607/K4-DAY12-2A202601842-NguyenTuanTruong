@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b1110" />
+    <meta
+      name="description"
+      content="Giao diện chat cho Day12 Cloud Services and Deployment"
+    />
+    <title>Day12 / Chat Console</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Day12 Chat Console">
+          <span class="brand-mark" aria-hidden="true">/</span>
+          <span>DAY12 <span class="brand-muted">/ CHAT</span></span>
+        </a>
+        <div class="topbar-actions">
+          <span id="global-status" class="status-chip status-loading">
+            <span class="status-dot" aria-hidden="true"></span>
+            Đang kiểm tra service
+          </span>
+          <a class="docs-link" href="/docs" target="_blank" rel="noreferrer">
+            API docs <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <aside class="sidebar" aria-label="Cấu hình phiên">
+          <div class="sidebar-intro">
+            <span class="eyebrow">CLOUD SERVICE CONSOLE</span>
+            <h1>Chat có kiểm soát.</h1>
+            <p>
+              Gửi request đến FastAPI service với Bearer token, Redis history,
+              rate limit và cost guard.
+            </p>
+          </div>
+
+          <section class="side-section">
+            <div class="section-label">
+              <span>Phiên hiện tại</span>
+              <span class="label-number">01</span>
+            </div>
+            <label class="field-label" for="client-id">Client ID</label>
+            <input id="client-id" class="text-input" type="text" value="sv-test" autocomplete="off" />
+
+            <label class="field-label" for="api-token">API token</label>
+            <div class="input-with-action">
+              <input
+                id="api-token"
+                class="text-input"
+                type="password"
+                placeholder="Bearer token của bạn"
+                autocomplete="off"
+              />
+              <button id="toggle-token" class="input-action" type="button" aria-label="Hiện token">
+                Hiện
+              </button>
+            </div>
+            <p class="field-hint">Token chỉ được dùng trong phiên này và không được lưu lại.</p>
+          </section>
+
+          <section class="side-section status-section">
+            <div class="section-label">
+              <span>Health signals</span>
+              <span class="label-number">02</span>
+            </div>
+            <div class="health-list">
+              <div class="health-row">
+                <span class="health-name"><span id="health-dot" class="health-dot pending"></span>Liveness</span>
+                <span id="health-value" class="health-value">Đang kiểm tra</span>
+              </div>
+              <div class="health-row">
+                <span class="health-name"><span id="ready-dot" class="health-dot pending"></span>Readiness</span>
+                <span id="ready-value" class="health-value">Đang kiểm tra</span>
+              </div>
+            </div>
+            <button id="refresh-health" class="quiet-button" type="button">
+              Kiểm tra lại <span aria-hidden="true">↻</span>
+            </button>
+          </section>
+
+          <section class="side-section endpoint-section">
+            <div class="section-label">
+              <span>Endpoint</span>
+              <span class="label-number">03</span>
+            </div>
+            <label class="field-label" for="api-base">API base URL</label>
+            <input id="api-base" class="text-input mono-input" type="url" autocomplete="off" />
+            <p class="field-hint">Mặc định dùng cùng origin với giao diện này.</p>
+          </section>
+
+          <div class="sidebar-footer">
+            <span class="service-label">DAY12-CHAT-SERVICE</span>
+            <span class="version-label">v1.0.0</span>
+          </div>
+        </aside>
+
+        <section class="conversation" aria-label="Khu vực trò chuyện">
+          <div class="conversation-header">
+            <div>
+              <span class="eyebrow">SECURE CONVERSATION</span>
+              <h2>Hỏi service bất cứ điều gì.</h2>
+            </div>
+            <button id="clear-chat" class="clear-button" type="button">
+              Xoá phiên <span aria-hidden="true">⌫</span>
+            </button>
+          </div>
+
+          <div id="message-list" class="message-list" aria-live="polite">
+            <div id="welcome-card" class="welcome-card">
+              <div class="welcome-index">READY / 00</div>
+              <h3>Service đang chờ request đầu tiên.</h3>
+              <p>
+                Nhập token, chọn một gợi ý hoặc viết câu hỏi riêng. Response sẽ hiển thị
+                usage, cost và số lượt history đã được Redis giữ lại.
+              </p>
+              <div class="prompt-grid">
+                <button class="prompt-button" type="button" data-prompt="Docker multi-stage build có lợi ích gì?">
+                  Docker multi-stage build có lợi ích gì?
+                </button>
+                <button class="prompt-button" type="button" data-prompt="Giải thích sự khác nhau giữa /healthz và /readyz.">
+                  Phân biệt /healthz và /readyz
+                </button>
+                <button class="prompt-button" type="button" data-prompt="Redis giúp service stateless như thế nào?">
+                  Redis giúp service stateless ra sao?
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div id="request-error" class="request-error" role="alert" hidden></div>
+
+          <form id="chat-form" class="composer">
+            <label class="sr-only" for="message-input">Nội dung câu hỏi</label>
+            <textarea
+              id="message-input"
+              rows="1"
+              maxlength="2000"
+              placeholder="Viết câu hỏi cho service..."
+            ></textarea>
+            <div class="composer-footer">
+              <span class="composer-hint"><kbd>Ctrl</kbd><span>+</span><kbd>Enter</kbd> để gửi</span>
+              <div class="composer-meta">
+                <span id="char-count">0 / 2000</span>
+                <button id="send-button" class="send-button" type="submit">
+                  Gửi request <span aria-hidden="true">↗</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </section>
+      </main>
+    </div>
+    <script src="/assets/app.js" defer></script>
+  </body>
+</html>

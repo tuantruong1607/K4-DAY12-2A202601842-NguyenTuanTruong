@@ -33,7 +33,7 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
-  agent:
+  chat:
     build: .
     ports:
       - "8000:8000"
@@ -41,10 +41,10 @@ services:
       redis:
         condition: service_healthy
     environment:
-      AGENT_API_KEY: ${AGENT_API_KEY}
+      API_TOKEN: ${API_TOKEN}
       REDIS_URL: redis://redis:6379/0
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health').read()"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz').read()"]
       interval: 30s
       timeout: 5s
       retries: 3

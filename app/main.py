@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 from functools import lru_cache
+from pathlib import Path
 
 from fastapi import Depends, FastAPI
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from utils.mock_llm import generate_reply
@@ -21,6 +23,7 @@ from .store import ChatStore, get_redis_client
 
 SERVICE_NAME = "day12-chat-service"
 SERVICE_VERSION = "1.0.0"
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 
 
 @lru_cache(maxsize=1)
@@ -52,6 +55,14 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="Day 12 Chat Service", version=SERVICE_VERSION, lifespan=lifespan)
+
+app.mount("/assets", StaticFiles(directory=FRONTEND_DIR), name="assets")
+
+
+@app.get("/", include_in_schema=False)
+def frontend_index():
+    """Serve the lightweight web client from the same origin as the API."""
+    return FileResponse(FRONTEND_DIR / "index.html")
 
 
 class ChatRequest(BaseModel):
