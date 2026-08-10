@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0a0e0d" />
+    <title>K4 Day 12 | Cloud Services and Deployment</title>
+    <style>
+      :root {
+        --bg: #0a0e0d;
+        --panel: #111a17;
+        --panel-2: #17221e;
+        --line: rgba(218, 245, 226, .16);
+        --text: #eef8f0;
+        --muted: #9aada1;
+        --faint: #62766a;
+        --accent: #b8f36a;
+        --accent-soft: rgba(184, 243, 106, .12);
+        --orange: #f0a56a;
+        --red: #ff8d83;
+        --radius: 18px;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { height: 100%; margin: 0; }
+      body {
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Segoe UI", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+
+      button, a { font: inherit; }
+      button { cursor: pointer; }
+      button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+      a { color: inherit; }
+
+      .deck {
+        height: 100dvh;
+        overflow: hidden;
+        position: relative;
+        background:
+          linear-gradient(rgba(184, 243, 106, .035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(184, 243, 106, .035) 1px, transparent 1px),
+          var(--bg);
+        background-size: 52px 52px;
+      }
+
+      .progress-track { background: rgba(255,255,255,.08); height: 3px; left: 0; position: fixed; right: 0; top: 0; z-index: 20; }
+      .progress-bar { background: var(--accent); height: 100%; transition: width 260ms ease; width: 8.33%; }
+      .topbar { align-items: center; display: flex; justify-content: space-between; left: 0; padding: 24px 42px; position: fixed; right: 0; top: 0; z-index: 10; }
+      .brand { align-items: center; display: flex; font-size: 11px; font-weight: 800; gap: 10px; letter-spacing: .16em; }
+      .brand-mark { align-items: center; background: var(--accent); border-radius: 6px; color: var(--bg); display: inline-flex; font-size: 17px; font-weight: 900; height: 24px; justify-content: center; width: 24px; }
+      .brand-muted { color: var(--faint); font-weight: 500; }
+      .counter { color: var(--muted); font-family: Consolas, monospace; font-size: 11px; letter-spacing: .1em; }
+      .counter strong { color: var(--accent); }
+
+      .slide {
+        display: none;
+        height: 100%;
+        min-height: 100dvh;
+        overflow: auto;
+        padding: 120px 8vw 90px;
+        position: relative;
+      }
+      .slide.is-active { animation: reveal 300ms ease both; display: flex; }
+      .slide-inner { margin: auto; max-width: 1220px; width: 100%; }
+      .slide.center { align-items: center; text-align: center; }
+      .slide.center .slide-inner { align-items: center; display: flex; flex-direction: column; }
+
+      .kicker { color: var(--accent); font-family: Consolas, monospace; font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
+      h1, h2, h3, p { margin-top: 0; }
+      h1 { font-size: clamp(48px, 7.2vw, 108px); letter-spacing: -.075em; line-height: .9; margin: 22px 0; max-width: 930px; }
+      h2 { font-size: clamp(36px, 5.1vw, 72px); letter-spacing: -.065em; line-height: .94; margin: 18px 0 12px; max-width: 880px; }
+      h3 { font-size: clamp(18px, 1.8vw, 26px); letter-spacing: -.03em; margin-bottom: 10px; }
+      .lead { color: var(--muted); font-size: clamp(17px, 1.65vw, 23px); line-height: 1.5; max-width: 700px; }
+      .center .lead { max-width: 660px; }
+      .accent { color: var(--accent); }
+      .orange { color: var(--orange); }
+      .muted { color: var(--muted); }
+      .faint { color: var(--faint); }
+      .mono { font-family: Consolas, "SFMono-Regular", monospace; }
+
+      .hero-meta { align-items: center; color: var(--muted); display: flex; flex-wrap: wrap; font-family: Consolas, monospace; font-size: 12px; gap: 12px; margin-top: 35px; }
+      .hero-meta span { border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; }
+      .hero-mark { color: var(--accent); font-family: Consolas, monospace; font-size: clamp(80px, 15vw, 210px); line-height: .65; margin-bottom: 25px; }
+
+      .section-head { align-items: flex-end; display: flex; gap: 32px; justify-content: space-between; margin-bottom: 36px; }
+      .section-head > div:first-child { max-width: 760px; }
+      .section-note { color: var(--faint); font-family: Consolas, monospace; font-size: 11px; line-height: 1.6; max-width: 230px; }
+
+      .grid-2 { display: grid; gap: 18px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid-3 { display: grid; gap: 18px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .grid-4 { display: grid; gap: 14px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .stack { display: grid; gap: 14px; }
+      .panel { background: rgba(17, 26, 23, .86); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; }
+      .panel.strong { background: var(--panel-2); border-color: rgba(184, 243, 106, .28); }
+      .panel p { color: var(--muted); font-size: 15px; line-height: 1.55; margin-bottom: 0; }
+      .panel-label { color: var(--faint); font-family: Consolas, monospace; font-size: 10px; letter-spacing: .12em; margin-bottom: 17px; text-transform: uppercase; }
+
+      .bullet-list { display: grid; gap: 14px; list-style: none; margin: 0; padding: 0; }
+      .bullet-list li { color: var(--muted); font-size: 16px; line-height: 1.45; padding-left: 24px; position: relative; }
+      .bullet-list li::before { color: var(--accent); content: "/"; font-family: Consolas, monospace; font-weight: 900; left: 0; position: absolute; }
+      .bullet-list strong { color: var(--text); }
+
+      .metric { min-height: 150px; }
+      .metric strong { color: var(--accent); display: block; font-family: Consolas, monospace; font-size: clamp(30px, 4vw, 50px); letter-spacing: -.08em; line-height: 1; }
+      .metric span { color: var(--muted); display: block; font-size: 13px; line-height: 1.4; margin-top: 14px; }
+
+      .flow { align-items: stretch; display: grid; gap: 10px; grid-template-columns: repeat(5, 1fr); margin-top: 34px; }
+      .flow-step { align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; display: flex; flex-direction: column; justify-content: center; min-height: 150px; padding: 15px; position: relative; text-align: center; }
+      .flow-step:not(:last-child)::after { color: var(--accent); content: "→"; font-size: 22px; position: absolute; right: -17px; top: 50%; z-index: 2; }
+      .flow-step strong { font-size: 16px; }
+      .flow-step span { color: var(--muted); font-size: 12px; line-height: 1.4; margin-top: 8px; }
+      .flow-step.active { background: var(--accent-soft); border-color: rgba(184, 243, 106, .45); }
+
+      .architecture { display: grid; gap: 14px; grid-template-columns: 1fr 1.5fr 1fr; margin-top: 30px; }
+      .architecture .node { align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; display: flex; justify-content: center; min-height: 115px; padding: 20px; text-align: center; }
+      .architecture .node.main { background: var(--accent-soft); border-color: rgba(184, 243, 106, .42); }
+      .architecture .node strong { display: block; font-size: 17px; }
+      .architecture .node small { color: var(--muted); display: block; font-family: Consolas, monospace; font-size: 10px; line-height: 1.5; margin-top: 7px; }
+      .architecture .arrow { align-items: center; color: var(--accent); display: flex; font-size: 25px; justify-content: center; }
+
+      .terminal { background: #060908; border: 1px solid rgba(184, 243, 106, .25); border-radius: 14px; box-shadow: 0 25px 70px rgba(0,0,0,.25); color: #cce7d1; font-family: Consolas, monospace; font-size: clamp(12px, 1.25vw, 16px); line-height: 1.75; overflow: hidden; padding: 22px 24px; }
+      .terminal::before { color: var(--faint); content: "●  ●  ●"; display: block; letter-spacing: 4px; margin-bottom: 16px; }
+      .terminal .prompt { color: var(--accent); }
+      .terminal .comment { color: var(--faint); }
+      .terminal .danger { color: var(--red); }
+
+      .code-card { background: #060908; border: 1px solid var(--line); border-radius: 14px; color: #cce7d1; font-family: Consolas, monospace; font-size: 13px; line-height: 1.7; overflow: auto; padding: 21px; }
+      .code-card .key { color: var(--accent); }
+      .code-card .value { color: var(--orange); }
+
+      .tag-row { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 18px; }
+      .tag { background: var(--accent-soft); border: 1px solid rgba(184, 243, 106, .3); border-radius: 999px; color: var(--accent); font-family: Consolas, monospace; font-size: 11px; padding: 7px 10px; }
+      .tag.neutral { background: rgba(255,255,255,.04); border-color: var(--line); color: var(--muted); }
+
+      .result-table { border-collapse: collapse; margin-top: 20px; width: 100%; }
+      .result-table th, .result-table td { border-bottom: 1px solid var(--line); padding: 13px 10px; text-align: left; }
+      .result-table th { color: var(--faint); font-family: Consolas, monospace; font-size: 10px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; }
+      .result-table td { color: var(--muted); font-size: 15px; }
+      .result-table td:last-child { color: var(--accent); font-family: Consolas, monospace; text-align: right; }
+
+      .demo-url { border: 1px solid rgba(184, 243, 106, .4); border-radius: 12px; color: var(--accent); display: inline-block; font-family: Consolas, monospace; font-size: clamp(16px, 2vw, 24px); margin-top: 26px; padding: 15px 18px; text-decoration: none; }
+      .demo-url:hover { background: var(--accent-soft); }
+      .footer-note { bottom: 28px; color: var(--faint); font-family: Consolas, monospace; font-size: 10px; left: 8vw; position: absolute; }
+
+      .controls { align-items: center; bottom: 22px; display: flex; gap: 8px; position: fixed; right: 42px; z-index: 20; }
+      .control-button { background: rgba(17,26,23,.9); border: 1px solid var(--line); border-radius: 9px; color: var(--muted); height: 35px; width: 40px; }
+      .control-button:hover { border-color: rgba(184,243,106,.5); color: var(--accent); }
+      .help { color: var(--faint); font-family: Consolas, monospace; font-size: 10px; margin-right: 10px; }
+
+      @keyframes reveal { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+      @media (prefers-reduced-motion: reduce) { .slide.is-active { animation: none; } .progress-bar { transition: none; } }
+
+      @media (max-width: 800px) {
+        .topbar { padding: 18px 20px; }
+        .slide { padding: 95px 20px 78px; }
+        .section-head { align-items: flex-start; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+        .grid-2, .grid-3, .grid-4, .architecture { grid-template-columns: 1fr; }
+        .flow { grid-template-columns: 1fr; }
+        .flow-step { min-height: 90px; }
+        .flow-step:not(:last-child)::after { bottom: -17px; right: auto; top: auto; transform: rotate(90deg); }
+        .footer-note { bottom: 20px; left: 20px; }
+        .controls { bottom: 12px; right: 20px; }
+        .help { display: none; }
+      }
+
+      @media print {
+        body { background: #fff; color: #111; overflow: visible; }
+        .deck { background: #fff; height: auto; overflow: visible; }
+        .slide, .slide.is-active { break-after: page; display: flex; height: 100vh; min-height: 0; page-break-after: always; }
+        .slide:last-of-type { page-break-after: auto; }
+        .topbar, .controls, .progress-track { display: none; }
+        .panel, .flow-step, .architecture .node { background: #f5f7f4; border-color: #ccd7cf; }
+        .lead, .panel p, .bullet-list li, .architecture .node small, .flow-step span { color: #53645a; }
+        .terminal, .code-card { background: #122019; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="deck" id="deck" aria-live="polite">
+      <div class="progress-track"><div class="progress-bar" id="progress"></div></div>
+      <header class="topbar">
+        <div class="brand"><span class="brand-mark">/</span><span>K4 DAY12 <span class="brand-muted">/ PRESENTATION</span></span></div>
+        <div class="counter"><strong id="current">01</strong> / <span id="total">12</span></div>
+      </header>
+
+      <section class="slide center is-active">
+        <div class="slide-inner">
+          <div class="hero-mark">/</div>
+          <div class="kicker">Cloud Services and Deployment</div>
+          <h1>Đưa một chat service lên cloud.</h1>
+          <p class="lead">Từ cấu hình 12-Factor đến API security, Redis state, Docker, frontend và CI/CD trên Render.</p>
+          <div class="hero-meta">
+            <span>Nguyen Tuan Truong</span>
+            <span>2A202601842</span>
+            <span>FastAPI + Redis + Docker</span>
+          </div>
+        </div>
+        <div class="footer-note">01 / OPENING</div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner">
+          <div class="section-head"><div><div class="kicker">The brief</div><h2>Một service nhỏ, nhiều điều phải đúng.</h2></div><div class="section-note">Mục tiêu không chỉ là chạy được local. Service phải an toàn, stateless và deploy được.</div></div>
+          <div class="grid-3">
+            <article class="panel strong"><div class="panel-label">01 / config</div><h3>Không hardcode secret</h3><p>Toàn bộ config đi qua environment. API_TOKEN không có giá trị mặc định.</p></article>
+            <article class="panel"><div class="panel-label">02 / reliability</div><h3>Biết khi nào sẵn sàng</h3><p>Liveness kiểm tra process. Readiness kiểm tra Redis trước khi nhận traffic.</p></article>
+            <article class="panel"><div class="panel-label">03 / delivery</div><h3>Deploy có kiểm soát</h3><p>Test xanh, build Docker pass, sau đó mới trigger Render deploy.</p></article>
+          </div>
+          <div class="tag-row"><span class="tag">API_TOKEN</span><span class="tag">REDIS_URL</span><span class="tag">/healthz</span><span class="tag">/readyz</span><span class="tag">/chat</span></div>
+        </div>
+        <div class="footer-note">02 / WHY THIS LAB</div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner">
+          <div class="kicker">Architecture</div><h2>State nằm ngoài process.</h2>
+          <p class="lead">FastAPI xử lý request, Redis giữ state dùng chung, mock LLM tạo response. Frontend được phục vụ cùng origin.</p>
+          <div class="architecture">
+            <div class="node"><div><strong>Browser</strong><small>HTML / CSS / JS<br />Bearer token</small></div></div>
+            <div class="arrow">→</div>
+            <div class="node main"><div><strong>FastAPI service</strong><small>auth → rate limit → cost<br />history → response</small></div></div>
+            <div class="arrow">→</div>
+            <div class="node"><div><strong>Redis</strong><small>chat history<br />quota state / spend</small></div></div>
+          </div>
+          <div class="flow">
+            <div class="flow-step active"><strong>Request</strong><span>POST /chat</span></div>
+            <div class="flow-step"><strong>Protect</strong><span>Bearer + bucket</span></div>
+            <div class="flow-step"><strong>Remember</strong><span>Redis history</span></div>
+            <div class="flow-step"><strong>Generate</strong><span>mock LLM</span></div>
+            <div class="flow-step"><strong>Respond</strong><span>usage + cost</span></div>
+          </div>
+        </div>
+        <div class="footer-note">03 / SYSTEM MAP</div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner">
+          <div class="section-head"><div><div class="kicker">CP1 / foundation</div><h2>Config, logging, health.</h2></div><div class="section-note">Một image, nhiều môi trường. Không sửa code khi đổi từ local sang cloud.</div></div>
+          <div class="grid-2">
+            <div class="code-card"><span class="key">API_TOKEN</span>=<span class="value">secret trong platform</span><br /><span class="key">REDIS_URL</span>=<span class="value">redis://...</span><br /><span class="key">BUCKET_CAPACITY</span>=<span class="value">10</span><br /><span class="key">DAILY_BUDGET_USD</span>=<span class="value">1.0</span><br /><span class="key">PORT</span>=<span class="value">Render tự cấp</span></div>
+            <div class="stack">
+              <article class="panel strong"><div class="panel-label">liveness</div><h3><span class="accent">/healthz</span> không gọi Redis</h3><p>Process sống thì 200. Khi draining thì 503 để load balancer dừng traffic mới.</p></article>
+              <article class="panel"><div class="panel-label">structured log</div><h3>Mỗi event là một JSON line</h3><p>Có event, severity, timestamp, client_id và cost. Không có token.</p></article>
+            </div>
+          </div>
+        </div>
+        <div class="footer-note">04 / CP1</div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner">
+          <div class="kicker">CP2 / container</div><h2>Đóng gói để chạy ở mọi nơi.</h2>
+          <div class="grid-2" style="margin-top: 34px;">
+            <div class="terminal"><span class="prompt">$</span> docker build -t day12-chat .<br /><span class="comment"># builder: dependencies</span><br /><span class="comment"># runtime: slim + appuser</span><br /><span class="prompt">$</span> docker compose up -d<br /><span class="comment"># chat + redis</span></div>
+            <div class="panel strong"><div class="panel-label">production checklist</div><ul class="bullet-list"><li><strong>Multi-stage:</strong> runtime không mang compiler.</li><li><strong>Non-root:</strong> chạy bằng appuser.</li><li><strong>Healthcheck:</strong> gọi `/healthz`.</li><li><strong>Port-aware:</strong> đọc `$PORT` của cloud.</li></ul></div>
+          </div>
+          <div class="tag-row"><span class="tag">python:3.11-slim</span><span class="tag">USER appuser</span><span class="tag">HEALTHCHECK</span><span class="tag">frontend included</span></div>
+        </div>
+        <div class="footer-note">05 / CP2</div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner">
+          <div class="section-head"><div><div class="kicker">CP3 / protection</div><h2>Không để một client làm cạn service.</h2></div><div class="section-note">Ba lớp bảo vệ chạy trước khi mock LLM được gọi.</div></div>
+          <div class="flow">
+            <div class="flow-step active"><strong>01</strong><span>Bearer token<br />401 nếu sai</span></div>
+            <div class="flow-step active"><strong>02</strong><span>Token bucket<br />429 nếu hết</span></div>
+            <div class="flow-step active"><strong>03</strong><span>Cost guard<br />402 nếu vượt</span></div>
+            <div class="flow-step"><strong>04</strong><span>Redis history<br />context</span></div>
+            <div class="flow-step"><strong>05</strong><span>Mock LLM<br />reply</span></div>
+          </div>
+          <div class="grid-3" style="margin-top: 22px;">
+            <div class="metric panel"><strong>401</strong><span>Authentication<br />Bearer token</span></div>
+            <div class="metric panel"><strong>429</strong><span>Rate limit<br />Retry-After</span></div>
+            <div class="metric panel"><strong>402</strong><span>Daily budget<br />per client</span></div>
+          </div>
+        </div>
+        <div class="footer-note">06 / CP3</div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner">
+          <div class="section-head"><div><div class="kicker">CP4 / reliability</div><h2>Scale ngang mà không mất lịch sử.</h2></div><div class="section-note">Redis biến process thành stateless worker.</div></div>
+          <div class="grid-2">
+            <div class="panel strong"><div class="panel-label">shared state</div><h3>chat:&lt;client_id&gt;</h3><p>Redis List giữ tối đa 12 message, TTL 3 ngày. Instance nào cũng đọc được cùng context.</p><div class="tag-row"><span class="tag">rpush</span><span class="tag">ltrim</span><span class="tag">expire</span></div></div>
+            <div class="panel"><div class="panel-label">graceful shutdown</div><h3>Draining trước khi dừng.</h3><p>SIGTERM đặt trạng thái draining, trả 503 cho probe và nhường lại handler cũ của server.</p><div class="tag-row"><span class="tag neutral">SIGTERM</span><span class="tag neutral">SIGINT</span><span class="tag neutral">503</span></div></div>
+          </div>
+          <div class="architecture" style="grid-template-columns: 1fr 1fr 1fr; margin-top: 22px;"><div class="node"><div><strong>Instance A</strong><small>request 01</small></div></div><div class="node main"><div><strong>Redis</strong><small>history dùng chung</small></div></div><div class="node"><div><strong>Instance B</strong><small>request 02</small></div></div></div>
+        </div>
+        <div class="footer-note">07 / CP4</div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner">
+          <div class="kicker">Product surface</div><h2>Frontend để demo service thật.</h2>
+          <div class="grid-2" style="margin-top: 30px;">
+            <div class="panel strong"><div class="panel-label">console</div><h3>Chat cùng origin</h3><p>Giao diện tại `/`, API tại `/chat`. Người dùng nhập Client ID và token, sau đó thấy reply, usage, cost và health signals.</p><div class="tag-row"><span class="tag">loading</span><span class="tag">error states</span><span class="tag">responsive</span></div></div>
+            <div class="panel"><div class="panel-label">security decision</div><h3>Token không được lưu.</h3><p>Frontend chỉ giữ token trong memory của phiên hiện tại. Client ID và API URL mới được nhớ để tiện test.</p><div class="tag-row"><span class="tag neutral">no localStorage token</span><span class="tag neutral">same origin</span></div></div>
+          </div>
+          <div class="terminal" style="margin-top: 22px;"><span class="prompt">GET</span> /healthz  <span class="accent">→ 200</span><br /><span class="prompt">GET</span> /readyz   <span class="accent">→ 200</span><br /><span class="prompt">POST</span> /chat     <span class="accent">→ reply + usage + cost</span></div>
+        </div>
+        <div class="footer-note">08 / FRONTEND</div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner">
+          <div class="section-head"><div><div class="kicker">CP5 / cloud</div><h2>Render là production surface.</h2></div><div class="section-note">Docker image, Redis và health check được khai báo trong Blueprint.</div></div>
+          <div class="grid-2">
+            <div class="panel strong"><div class="panel-label">public service</div><h3 class="accent">day12-chat-2249.onrender.com</h3><p>HTTPS public URL. `/healthz` kiểm tra process, `/readyz` kiểm tra Redis, `/` mở frontend.</p><a class="demo-url" href="https://day12-chat-2249.onrender.com" target="_blank" rel="noreferrer">Mở service ↗</a></div>
+            <div class="code-card"><span class="key">runtime</span>: <span class="value">docker</span><br /><span class="key">healthCheckPath</span>: <span class="value">/healthz</span><br /><span class="key">API_TOKEN</span>: <span class="value">sync: false</span><br /><span class="key">REDIS_URL</span>: <span class="value">fromService</span><br /><span class="key">autoDeployTrigger</span>: <span class="value">off</span></div>
+          </div>
+          <div class="tag-row"><span class="tag">HTTPS</span><span class="tag">Render Blueprint</span><span class="tag">Redis service</span><span class="tag">healthcheck</span></div>
+        </div>
+        <div class="footer-note">09 / CP5</div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner">
+          <div class="kicker">Delivery pipeline</div><h2>CI xanh rồi mới CD.</h2>
+          <div class="flow" style="margin-top: 42px;">
+            <div class="flow-step active"><strong>Pull Request</strong><span>review + checks</span></div>
+            <div class="flow-step active"><strong>Test</strong><span>CP1 → CP4</span></div>
+            <div class="flow-step active"><strong>Build</strong><span>Docker image</span></div>
+            <div class="flow-step active"><strong>Push main</strong><span>approved change</span></div>
+            <div class="flow-step active"><strong>Render</strong><span>Deploy Hook</span></div>
+          </div>
+          <div class="grid-2" style="margin-top: 24px;">
+            <div class="panel"><div class="panel-label">GitHub Secret</div><h3><span class="accent">RENDER_DEPLOY_HOOK_URL</span></h3><p>URL hook chỉ nằm trong GitHub Secrets, không nằm trong YAML hay report.</p></div>
+            <div class="panel"><div class="panel-label">quality gate</div><h3><span class="accent">needs: [test, build-image]</span></h3><p>Test fail hoặc Docker build fail thì job deploy không được chạy.</p></div>
+          </div>
+        </div>
+        <div class="footer-note">10 / CI CD</div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner">
+          <div class="section-head"><div><div class="kicker">Evidence</div><h2>Kết quả có thể kiểm chứng.</h2></div><div class="section-note">Các test public CP5 và test local đều có mục đích riêng.</div></div>
+          <table class="result-table">
+            <thead><tr><th>Hạng mục</th><th>Kết quả</th></tr></thead>
+            <tbody>
+              <tr><td>CP1 Config, health, logging</td><td>13 passed</td></tr>
+              <tr><td>CP2 Docker, không chạy daemon</td><td>14 passed</td></tr>
+              <tr><td>CP3 Auth, bucket, cost guard</td><td>29 passed</td></tr>
+              <tr><td>CP4 Redis, readiness, shutdown</td><td>19 passed</td></tr>
+              <tr><td>CP5 Cloud deployment</td><td>9 passed, 4 skipped</td></tr>
+              <tr><td>CI/CD workflow structure</td><td>11 passed</td></tr>
+            </tbody>
+          </table>
+          <p class="lead" style="font-size: 15px; margin-top: 24px;">Bốn test Local Fallback được skip là đúng vì deployment chính chạy trên cloud, không dùng `LOCAL_FALLBACK=true`.</p>
+        </div>
+        <div class="footer-note">11 / EVIDENCE</div>
+      </section>
+
+      <section class="slide center">
+        <div class="slide-inner">
+          <div class="hero-mark">✓</div>
+          <div class="kicker">Ready for demo</div>
+          <h2>Build. Protect. Deploy.</h2>
+          <p class="lead">Mở frontend, kiểm tra health, gửi một request có token và cho thấy response có history, usage cùng cost.</p>
+          <a class="demo-url" href="https://day12-chat-2249.onrender.com" target="_blank" rel="noreferrer">day12-chat-2249.onrender.com ↗</a>
+          <div class="hero-meta"><span>Arrow keys / Space để chuyển slide</span><span>P để in PDF</span></div>
+        </div>
+        <div class="footer-note">12 / CLOSE</div>
+      </section>
+
+      <nav class="controls" aria-label="Điều hướng slide">
+        <span class="help">← → / SPACE</span>
+        <button class="control-button" id="prev" type="button" aria-label="Slide trước">←</button>
+        <button class="control-button" id="next" type="button" aria-label="Slide sau">→</button>
+      </nav>
+    </main>
+
+    <script>
+      (() => {
+        const slides = [...document.querySelectorAll('.slide')];
+        const current = document.querySelector('#current');
+        const total = document.querySelector('#total');
+        const progress = document.querySelector('#progress');
+        let index = Math.max(0, Math.min(slides.length - 1, Number.parseInt(location.hash.slice(1), 10) - 1 || 0));
+
+        total.textContent = String(slides.length).padStart(2, '0');
+
+        function render(updateHash = true) {
+          slides.forEach((slide, slideIndex) => slide.classList.toggle('is-active', slideIndex === index));
+          current.textContent = String(index + 1).padStart(2, '0');
+          progress.style.width = `${((index + 1) / slides.length) * 100}%`;
+          if (updateHash) history.replaceState(null, '', `#${index + 1}`);
+        }
+
+        function move(step) {
+          index = (index + step + slides.length) % slides.length;
+          render();
+        }
+
+        document.querySelector('#prev').addEventListener('click', () => move(-1));
+        document.querySelector('#next').addEventListener('click', () => move(1));
+        window.addEventListener('keydown', (event) => {
+          if (['ArrowRight', 'PageDown', ' '].includes(event.key)) { event.preventDefault(); move(1); }
+          if (['ArrowLeft', 'PageUp'].includes(event.key)) { event.preventDefault(); move(-1); }
+          if (event.key === 'Home') { index = 0; render(); }
+          if (event.key === 'End') { index = slides.length - 1; render(); }
+          if (event.key.toLowerCase() === 'p') window.print();
+        });
+        window.addEventListener('hashchange', () => {
+          const nextIndex = Number.parseInt(location.hash.slice(1), 10) - 1;
+          if (Number.isInteger(nextIndex) && nextIndex >= 0 && nextIndex < slides.length) { index = nextIndex; render(false); }
+        });
+        render(false);
+      })();
+    </script>
+  </body>
+</html>

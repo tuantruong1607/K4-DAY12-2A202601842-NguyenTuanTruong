@@ -1,10 +1,10 @@
-# Báo cáo bài lab K3 Day 12 — Cloud Services and Deployment
+# Báo cáo bài lab K4 Day 12 — Cloud Services and Deployment
 
 ## 1. Thông tin bài làm
 
 - Học viên: Nguyen Tuan Truong
 - Mã học viên: 2A202601842
-- Repository: https://github.com/tuantruong1607/DAY12-2A202601842-NguyenTuanTruong
+- Repository: https://github.com/tuantruong1607/K4-DAY12-2A202601842-NguyenTuanTruong
 - Public service: https://day12-chat-2249.onrender.com
 - Platform: Render
 - Ngày kiểm tra: 2026-08-10
@@ -238,7 +238,22 @@ Không nên bật đồng thời Render Auto-Deploy và Deploy Hook trong workfl
 
 README đã có badge workflow. Badge chỉ chuyển sang `passing` sau khi workflow được push lên GitHub và chạy thành công ít nhất một lần.
 
-## 9. Kết quả test
+## 9. Sự cố Railway và cách chuyển sang Render
+
+Workflow Railway cũ chạy được phần test và build nhưng lỗi ở bước deploy:
+
+```text
+RAILWAY_SERVICE: day-12
+Failed to upload code with status code 404 Not Found
+```
+
+Trong Railway Dashboard, service `day-12` và Redis lúc đó vẫn ở trạng thái `New`, nghĩa là resource chưa được tạo thật trong project. Railway CLI upload code nhưng không tìm thấy deployment target nên trả 404.
+
+CD đã được chuyển sang Render Deploy Hook để tránh phụ thuộc vào Railway CLI, project ID và service ID. Render service, Redis, Dockerfile và health check `/healthz` được quản lý trong `render.yaml`; GitHub Actions chỉ gọi Deploy Hook sau khi CI xanh.
+
+File `railway.toml` được giữ lại làm phương án triển khai thay thế, nhưng không còn được workflow hiện tại sử dụng.
+
+## 10. Kết quả test
 
 | Checkpoint | Kết quả |
 |------------|---------|
@@ -247,11 +262,11 @@ README đã có badge workflow. Badge chỉ chuyển sang `passing` sau khi work
 | CP3 | 29 passed |
 | CP4 | 19 passed |
 | CP5 | 9 passed, 4 skipped |
-| Bonus CI/CD cấu trúc workflow | 12 passed, 1 test badge chờ workflow chạy trên GitHub |
+| Bonus workflow CI/CD, không kiểm tra badge online | 11 passed, 2 deselected |
 
 Bốn test CP5 bị skip là nhóm `TestLocalFallback`. Chúng chỉ chạy khi `LOCAL_FALLBACK=true`. Vì bài đã deploy cloud nên để `LOCAL_FALLBACK=false` là đúng; các test public deployment đã chạy và pass.
 
-## 10. Các lỗi gặp phải và cách xử lý
+## 11. Các lỗi gặp phải và cách xử lý
 
 ### Mở URL root vẫn nhận 404
 
@@ -271,7 +286,7 @@ docker ps --filter "publish=6379"
 
 Không chạy thêm Redis thứ hai trên cùng port.
 
-## 11. Lệnh kiểm tra cuối
+## 12. Lệnh kiểm tra cuối
 
 ```powershell
 Set-Location C:\Users\banka\Documents\DAY12-2A202601842-NguyenTuanTruong

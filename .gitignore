@@ -21,6 +21,9 @@ Thumbs.db
 # Logs
 *.log
 
+# Local API test payloads
+request.json
+
 # Tài liệu nội bộ của giảng viên — không đẩy lên repo phát cho học viên
 solution/
 

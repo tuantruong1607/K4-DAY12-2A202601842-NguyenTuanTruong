@@ -6,7 +6,7 @@
 |-----|----------|
 | Họ và tên | Nguyen Tuan Truong |
 | Mã học viên | 2A202601842 |
-| Repo | https://github.com/tuantruong1607/DAY12-2A202601842-NguyenTuanTruong |
+| Repo | https://github.com/tuantruong1607/K4-DAY12-2A202601842-NguyenTuanTruong |
 
 ## Service
 

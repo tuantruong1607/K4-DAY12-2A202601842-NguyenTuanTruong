@@ -24,6 +24,7 @@ from .store import ChatStore, get_redis_client
 SERVICE_NAME = "day12-chat-service"
 SERVICE_VERSION = "1.0.0"
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+PRESENTATION_FILE = Path(__file__).resolve().parent.parent / "presentation.html"
 
 
 @lru_cache(maxsize=1)
@@ -63,6 +64,12 @@ app.mount("/assets", StaticFiles(directory=FRONTEND_DIR), name="assets")
 def frontend_index():
     """Serve the lightweight web client from the same origin as the API."""
     return FileResponse(FRONTEND_DIR / "index.html")
+
+
+@app.get("/presentation", include_in_schema=False)
+def presentation():
+    """Serve the HTML presentation deck."""
+    return FileResponse(PRESENTATION_FILE)
 
 
 class ChatRequest(BaseModel):

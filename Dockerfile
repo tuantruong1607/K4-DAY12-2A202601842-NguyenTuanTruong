@@ -36,6 +36,7 @@ COPY --from=builder /install /usr/local
 COPY app ./app
 COPY utils ./utils
 COPY frontend ./frontend
+COPY presentation.html ./presentation.html
 
 RUN useradd --create-home --uid 10001 appuser
 USER appuser
