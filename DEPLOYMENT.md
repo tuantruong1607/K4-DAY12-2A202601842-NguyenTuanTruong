@@ -4,7 +4,7 @@
 
 | Mục | Nội dung |
 |-----|----------|
-| Họ và tên | Nguyen Tuan Truong |
+| Họ và tên | Nguyễn Tuấn Trường |
 | Mã học viên | 2A202601842 |
 | Repo | https://github.com/tuantruong1607/K4-DAY12-2A202601842-NguyenTuanTruong |
 
