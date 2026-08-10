@@ -222,7 +222,25 @@ Trả về reply, client_id, turns_before, usd_cost và usage.
 
 Phiên bản Render được kiểm tra trước khi thêm frontend có thể vẫn trả 404 tại `/` cho đến khi push code và redeploy. Sau khi redeploy commit mới, `/` sẽ mở web console; `/docs` vẫn là tài liệu API tương tác.
 
-## 8. Kết quả test
+## 8. CI/CD với GitHub Actions và Railway
+
+Workflow nằm tại `.github/workflows/ci.yml` và có ba job:
+
+1. `test`: cài `requirements.txt`, chạy CP1 đến CP4 và bỏ qua test Docker bằng `-m "not docker"`.
+2. `build-image`: chạy `docker build` để phát hiện lỗi Dockerfile trước khi deploy.
+3. `deploy`: chỉ chạy khi push vào `main`, đồng thời có `needs: [test, build-image]` nên test hoặc build lỗi thì không deploy.
+
+Job deploy dùng `RAILWAY_TOKEN` từ GitHub Secrets và ba repository variables:
+
+- `RAILWAY_PROJECT_ID`: ID project Railway.
+- `RAILWAY_ENVIRONMENT`: thường là `production`.
+- `RAILWAY_SERVICE`: tên service web trên Railway.
+
+Không nên bật đồng thời Railway GitHub Autodeploy và job `railway up` trong workflow này, vì một commit có thể tạo hai lần deploy. Chọn một cơ chế CD; workflow hiện tại là cơ chế được chọn vì nó tạo cổng chất lượng sau CI.
+
+README đã có badge workflow. Badge chỉ chuyển sang `passing` sau khi workflow được push lên GitHub và chạy thành công ít nhất một lần.
+
+## 9. Kết quả test
 
 | Checkpoint | Kết quả |
 |------------|---------|
@@ -231,10 +249,11 @@ Phiên bản Render được kiểm tra trước khi thêm frontend có thể v�
 | CP3 | 29 passed |
 | CP4 | 19 passed |
 | CP5 | 9 passed, 4 skipped |
+| Bonus CI/CD cấu trúc workflow | 12 passed, 1 test badge chờ workflow chạy trên GitHub |
 
 Bốn test CP5 bị skip là nhóm `TestLocalFallback`. Chúng chỉ chạy khi `LOCAL_FALLBACK=true`. Vì bài đã deploy cloud nên để `LOCAL_FALLBACK=false` là đúng; các test public deployment đã chạy và pass.
 
-## 9. Các lỗi gặp phải và cách xử lý
+## 10. Các lỗi gặp phải và cách xử lý
 
 ### Mở URL root vẫn nhận 404
 
@@ -254,7 +273,7 @@ docker ps --filter "publish=6379"
 
 Không chạy thêm Redis thứ hai trên cùng port.
 
-## 10. Lệnh kiểm tra cuối
+## 11. Lệnh kiểm tra cuối
 
 ```powershell
 Set-Location C:\Users\banka\Documents\DAY12-2A202601842-NguyenTuanTruong
